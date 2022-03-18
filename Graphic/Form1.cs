@@ -20,13 +20,20 @@ namespace Graphic
         {
             InitializeComponent();
         }
+        //F(x) = Интеграл всех значение от -бесконечности до x 
         double F(double x, double lambda)
         {
-            return lambda * x - Math.Pow(lambda, 2) * Math.Pow(x, 2) / 4;
+            if (x >= 2 / lambda)
+                return 1;
+            if (x <= 0) //поменять условие для lamda < 0
+                return 0;
+            return lambda * x - Math.Pow(lambda, 2) * Math.Pow(x, 2) / 4; // -l^2*x^2 / 4 + l*x - r = 0;
+            // D = l^2 - 4 * (-l^2 / 4) * (-r)
+            //x1 = ((-l) - Корень(D)) / 2 -l^2
         }
-        double GenerateRandomVariable(double lambda, double cy, double dy)
+        double GenerateRandomVariable(double lambda, double cy, double dy, double rand0_1)
         {
-            double y = cy + rnd.NextDouble() * (dy - cy);
+            double y = cy + rand0_1 * (dy - cy);
             return 2 * (1 - Math.Sqrt(1 - y)) / lambda;
         }
         List<double> GenerateSelection(int amount, double left, double right, double lambda)
@@ -61,7 +68,7 @@ namespace Graphic
             List<double> Selection = new List<double>();
             for (int i = 0; i < amount; i++)
             {
-                Selection.Add(GenerateRandomVariable(lambda, leftProbability, rightProbability));
+                Selection.Add(GenerateRandomVariable(lambda, leftProbability, rightProbability, rnd.NextDouble()));
             }
             return Selection;
         }
@@ -114,9 +121,32 @@ namespace Graphic
                 //float y = (float)count / selectionSize;
                 chart1.Series["Эксперементальная функция"].Points.AddXY(x, y);
 			}
-			for (int i = 0; i < chartSize; i++)
+            int pocketNum = 7;
+            double[] pocketStep = new double[];
+            double[] Pi = 1 / pocketNum;
+            int[] Mi = new int[7];
+            double moveK = F(left, lambda);
+            double scaleK =  1 / (F(right, lambda) - F(left, lambda));
+			for (int i = 0; i < pocketNum; i++)
 			{
+                Pi[i] = (F(left + pocketStep * (i + 1), lambda) - moveK) * scaleK - (F(left + pocketStep * i, lambda) - moveK) * scaleK;
+                Mi[i] = 0;
+				foreach (double item in Selection)
+				{
+                    if (item > left + pocketStep * i && item <= left + pocketStep * (i + 1))
+                        Mi[i]++;
+				}
 			}
+
+
+            double hiKv = 0;
+			for (int i = 0; i < pocketNum; i++)
+			{
+                if (Pi[i] == 0)
+                    continue;
+                hiKv += (Mi[i] - Selection.Count * Pi[i]) * (Mi[i] - Selection.Count * Pi[i]) / (Selection.Count * Pi[i]);
+            }
+            listBox1.Items.Add(hiKv);
         }
 	}
 }
