@@ -13,6 +13,7 @@ namespace Graphic
     //Левая граница
     //Условие Пирсона
     //Пара
+
     public partial class Form1 : Form
     {
         static Random rnd = new Random();
@@ -65,6 +66,9 @@ namespace Graphic
             else
                 rightProbability = F(right, lambda);
 
+            if (leftProbability == rightProbability)
+                throw new Exception("На этом интервале не генерируется СВ");
+
             List<double> Selection = new List<double>();
             for (int i = 0; i < amount; i++)
             {
@@ -110,41 +114,31 @@ namespace Graphic
 			{
                 float step = Convert.ToSingle((right - left)/(chartSize));
                 float x = Convert.ToSingle(left + step * i);
-                float y = (float)Selection.Where(p => p < x).Count() / Selection.Count;
-                //int count = 0;
-				//for (int j = 0; j < selectionSize; j++)
-				//{
-                //    if (Selection[j] <= x)
-                //        count++;
-				//}
-
-                //float y = (float)count / selectionSize;
+                float y = (float)Selection.Where(p => p <= x).Count() / Selection.Count;
+                
                 chart1.Series["Эксперементальная функция"].Points.AddXY(x, y);
 			}
-            int pocketNum = 7;
-            double[] pocketStep = new double[];
-            double[] Pi = 1 / pocketNum;
-            int[] Mi = new int[7];
-            double moveK = F(left, lambda);
-            double scaleK =  1 / (F(right, lambda) - F(left, lambda));
-			for (int i = 0; i < pocketNum; i++)
-			{
-                Pi[i] = (F(left + pocketStep * (i + 1), lambda) - moveK) * scaleK - (F(left + pocketStep * i, lambda) - moveK) * scaleK;
-                Mi[i] = 0;
-				foreach (double item in Selection)
-				{
-                    if (item > left + pocketStep * i && item <= left + pocketStep * (i + 1))
-                        Mi[i]++;
-				}
-			}
+            const int pocketNum = 7;
+            double[] pocketBorder = new double[pocketNum + 1];
+            double P = 1.0 / pocketNum;
+            int[] Mi = new int[pocketNum];
 
+            double Fa = F(left, lambda);
+            double Fb = F(right, lambda);
+
+            
+			for (int i = 1; i < pocketNum; i++)
+                pocketBorder[i] = GenerateRandomVariable(lambda, Fa, Fb, P * i);
+            pocketBorder[0] = left;
+            pocketBorder[pocketNum] = right;
+
+			for (int i = 0; i < pocketNum; i++)
+                Mi[i] = Selection.Where(x => x >= pocketBorder[i] && x < pocketBorder[i + 1]).Count();
 
             double hiKv = 0;
 			for (int i = 0; i < pocketNum; i++)
 			{
-                if (Pi[i] == 0)
-                    continue;
-                hiKv += (Mi[i] - Selection.Count * Pi[i]) * (Mi[i] - Selection.Count * Pi[i]) / (Selection.Count * Pi[i]);
+                hiKv += (Mi[i] - Selection.Count * P) * (Mi[i] - Selection.Count * P) / (Selection.Count * P);
             }
             listBox1.Items.Add(hiKv);
         }
