@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Diagnostics;
 
 namespace Graphic
 {
@@ -16,7 +15,6 @@ namespace Graphic
         {
             InitializeComponent();
         }
-        
         private void GenerateAndPrint()
 		{
             if (numericUpDown3.Value == 0)
@@ -24,13 +22,23 @@ namespace Graphic
             if (numericUpDown2.Value <= numericUpDown1.Value)
                 throw new Exception("Правая граница меньше левой!");
 
-
             double left = Convert.ToDouble(numericUpDown1.Value);
             double right = Convert.ToDouble(numericUpDown2.Value);
             double lambda = Convert.ToDouble(numericUpDown3.Value);
-            int selectionSize = Convert.ToInt32(numericUpDown4.Value); ;
+            int selectionSize = Convert.ToInt32(numericUpDown4.Value);
+
             List<double> Selection = LambdaRandVarGenerator.GenerateSelection(selectionSize, left, right, lambda);
-            listBox1.Items.Clear();
+
+            #region Сохранение выборки
+            string filePath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            filePath = filePath + @"\Numbers.txt";
+            StreamWriter file = new StreamWriter(filePath, false);
+            foreach (double d in Selection)
+                file.WriteLine(d);
+            file.Close();
+            Process.Start(filePath);
+            #endregion
+
             #region Параметры графика
             chart1.Series.Clear();
             chart1.Series.Add("Эксперементальная функция");
@@ -49,6 +57,8 @@ namespace Graphic
             chart1.ChartAreas[0].AxisY.Maximum = 1;
             chart1.ChartAreas[0].BorderWidth = 4;
             #endregion
+
+            #region Построение графиков функций
             int chartSize = 100; //Количество точек для построения графика
             for (int i = 0; i < chartSize; i++)
             {
@@ -61,6 +71,7 @@ namespace Graphic
                 y = (float)Selection.Where(p => p <= x).Count() / Selection.Count;
                 chart1.Series["Эксперементальная функция"].Points.AddXY(x, y);
             }
+            #endregion
 
             #region Критерий Коломогорова
             //1. Сортируем
@@ -84,6 +95,7 @@ namespace Graphic
             //3. Выводим результат
             chart1.Series["Критерий Колмогорова"].Points.AddXY(xMaxDif, yMaxDif);
             chart1.Series["Критерий Колмогорова"].Points.AddXY(xMaxDif, LambdaRandVarGenerator.FinRange(xMaxDif, lambda, left, right));
+            listBox1.Items.Clear();
             listBox1.Items.Add("Критерий Колмогорова:");
             listBox1.Items.Add(Math.Round(difMax, 5));
             #endregion
@@ -100,37 +112,7 @@ namespace Graphic
             listBox1.Items.Add("Среднеквадратичное отклонение выборки");
             listBox1.Items.Add(Math.Round(LambdaRandVarGenerator.GetStandardDeviation(Selection), 5));
             #endregion
-            #region Критерий Хи квадрат
-            /*int pocketNum = 1 + Convert.ToInt32(Math.Log(Selection.Count) / Math.Log(2));
-            double[] pocketBorder = new double[pocketNum + 1];
-            double P = 1.0 / pocketNum;
-            int[] Mi = new int[pocketNum];
-
-            double Fa = F(left, lambda);
-            double Fb = F(right, lambda);
-            for (int i = 1; i < pocketNum; i++)
-                pocketBorder[i] = GenerateRandomVariable(lambda, Fa, Fb, P * i);
-            pocketBorder[0] = left;
-            pocketBorder[pocketNum] = right;
-
-            for (int i = 0; i < pocketNum; i++)
-                Mi[i] = Selection.Where(x => x >= pocketBorder[i] && x < pocketBorder[i + 1]).Count();
-
-            double hiKv = 0;
-            for (int i = 0; i < pocketNum; i++)
-            {
-                hiKv += (Mi[i] - Selection.Count * P) * (Mi[i] - Selection.Count * P) / (Selection.Count * P);
-            }
-            listBox1.Items.Add("Хи квадрат: " + hiKv);
-            listBox1.Items.Add("Должно быть ~" + Math.Round(Selection.Count * P, 0));
-            int index;
-            for (index = 0; index < pocketNum - 1; index++)
-                listBox1.Items.Add("[" + Math.Round(pocketBorder[index], 3) + "; " + Math.Round(pocketBorder[index + 1], 3) + ") - " + Mi[index]);
-
-            listBox1.Items.Add("[" + Math.Round(pocketBorder[index], 3) + "; " + Math.Round(pocketBorder[index + 1], 3) + "] - " + Mi[index]);
-            listBox1.Items.Add("Итого: " + Mi.Sum());
-            */
-            #endregion
+            
         }
         private void Start(object sender, EventArgs e)
         {
