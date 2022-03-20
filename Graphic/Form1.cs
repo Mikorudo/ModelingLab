@@ -89,6 +89,8 @@ namespace Graphic
             #endregion
 
             #region Параметры выборки
+            listBox1.Items.Add("Среднее выборки");
+            listBox1.Items.Add(Math.Round(LambdaRandVarGenerator.GetAverage(Selection), 5));
             listBox1.Items.Add("Медиана выборки");
             listBox1.Items.Add(Math.Round(LambdaRandVarGenerator.GetMedian(Selection), 5));
             listBox1.Items.Add("Мода выборки");

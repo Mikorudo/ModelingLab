@@ -76,6 +76,7 @@ namespace Graphic
             }
             return Selection;
         }
+        
         static public double GetMedian(List<double> selection)
         {
             if (selection.Count == 0)
@@ -119,6 +120,10 @@ namespace Graphic
             }
             return mode;
         }
+        static public double GetAverage(List<double> selection)
+		{
+            return selection.Average();
+		}
         static public double GetDispersion(List<double> selection)
         {
             double m = selection.Average();
