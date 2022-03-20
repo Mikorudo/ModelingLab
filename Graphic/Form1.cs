@@ -118,7 +118,7 @@ namespace Graphic
                 
                 chart1.Series["Эксперементальная функция"].Points.AddXY(x, y);
 			}
-            const int pocketNum = 7;
+            int pocketNum = 1 + Convert.ToInt32(Math.Log(Selection.Count)/Math.Log(2));
             double[] pocketBorder = new double[pocketNum + 1];
             double P = 1.0 / pocketNum;
             int[] Mi = new int[pocketNum];
@@ -140,7 +140,14 @@ namespace Graphic
 			{
                 hiKv += (Mi[i] - Selection.Count * P) * (Mi[i] - Selection.Count * P) / (Selection.Count * P);
             }
-            listBox1.Items.Add(hiKv);
+            listBox1.Items.Add("Хи квадрат: " + hiKv);
+            int index;
+            for (index = 0; index < pocketNum - 1; index++)
+                listBox1.Items.Add("[" + Math.Round(pocketBorder[index], 3) + "; " + Math.Round(pocketBorder[index + 1], 3) + ") - " + Mi[index]);
+
+            listBox1.Items.Add("[" + Math.Round(pocketBorder[index], 3) + "; " + Math.Round(pocketBorder[index + 1], 3) + "] - " + Mi[index]);
+            listBox1.Items.Add("Итого: " + Mi.Sum());
         }
 	}
+    
 }
